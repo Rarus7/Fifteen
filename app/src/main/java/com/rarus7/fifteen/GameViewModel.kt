@@ -1,13 +1,23 @@
 package com.rarus7.fifteen
 
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class GameViewModel : ViewModel(){
+class GameViewModel(application: Application) : AndroidViewModel(application){
+
+    private val context = getApplication<Application>().applicationContext
     private val _board = MutableStateFlow<List<Int>>(emptyList())
     val board = _board.asStateFlow()
 
@@ -17,8 +27,12 @@ class GameViewModel : ViewModel(){
     private val _isSolved = MutableStateFlow(false)
     val isSolved = _isSolved.asStateFlow()
 
+    private val _records = MutableStateFlow<List<GameRecord>>(emptyList())
+    val records = _records.asStateFlow()
+
     init {
         startNewGame()
+        loadRecords()
     }
 
     fun startNewGame() {
@@ -112,6 +126,37 @@ class GameViewModel : ViewModel(){
         val temp = this[i]
         this[i] = this[j]
         this[j] = temp
+    }
+
+    fun saveRecord(moves: Int) {
+        viewModelScope.launch {
+            val dateTime = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
+                .format(Date())
+
+            val newRecord = GameRecord(dateTime, moves)
+
+            // 3. Обновляем список рекордов
+            val updatedRecords = (_records.value + newRecord)
+                .sortedBy { it.moves }
+                .take(5)
+
+            _records.value = updatedRecords
+
+            // 4. Сохраняем в SharedPreferences
+            val prefs = context.getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
+            val recordsJson = Json.encodeToString(updatedRecords)
+            prefs.edit().putString("records", recordsJson).apply()
+        }
+    }
+
+    private fun loadRecords() {
+        viewModelScope.launch {
+            val prefs = context.getSharedPreferences("GamePrefs", Context.MODE_PRIVATE)
+            val recordsJson = prefs.getString("records", null)
+            _records.value = recordsJson?.let {
+                Json.decodeFromString<List<GameRecord>>(it)
+            } ?: emptyList()
+        }
     }
 
 }
