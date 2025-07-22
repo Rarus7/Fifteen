@@ -50,7 +50,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         _board.value = numbers
     }*/
 
-    /* ---------- 1. Генератор решаемой комбинации ---------- */
+    /* ----------  Генератор решаемой комбинации ---------- */
     fun startNewGame() {
         _moves.value = 0
         _isSolved.value = false
@@ -71,28 +71,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         _board.value = board
     }
 
+    /* ----------  Вспомогательные функции ---------- */
 
-    /* ---------- 2. Проверка решаемости (классическая) ---------- */
-    private fun isSolvable(list: List<Int>): Boolean {
-        val flat = list.filter { it != 0 }       // убираем пустую клетку
-        val inv  = flat.indices.sumOf { i ->
-            (i + 1 until flat.size).count { j -> flat[i] > flat[j] }
+    private fun neighbours4(index: Int) =
+        mutableListOf<Int>().apply {
+            val (r, c) = index / 4 to index % 4
+            if (r > 0) add(index - 4)
+            if (r < 3) add(index + 4)
+            if (c > 0) add(index - 1)
+            if (c < 3) add(index + 1)
         }
-        val emptyRow = list.indexOf(0) / 4       // нумерация строк снизу (0..3)
-        return (inv + emptyRow + 1) % 2 == 0     // для 4×4 чётная сумма → решаемо
-    }
-
-    /* ---------- 3. Вспомогательные функции ---------- */
-    private fun neighbours4(index: Int): List<Int> {
-        val r = index / 4
-        val c = index % 4
-        val res = mutableListOf<Int>()
-        if (r > 0) res += index - 4   // вверх
-        if (r < 3) res += index + 4   // вниз
-        if (c > 0) res += index - 1   // влево
-        if (c < 3) res += index + 1   // вправо
-        return res
-    }
 
     private var _lastMoveFrom = MutableStateFlow(-1)
     private var _lastMoveTo = MutableStateFlow(-1)
@@ -128,19 +116,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
             if (isPuzzleSolved(newBoard)) {
                 _isSolved.value = true
             }
-/*
-            _lastMoveFrom.value = index
-            _lastMoveTo.value = emptyIndex
-
-            //val newBoard = _board.value.toMutableList()
-            newBoard.swap(index, emptyIndex)
-            _board.value = newBoard
-            _moves.value++
-
-            // Проверяем, решена ли головоломка
-            if (isPuzzleSolved(newBoard)) {
-                _isSolved.value = true
-            }*/
         }
     }
 
@@ -154,12 +129,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
                 (col == emptyCol && Math.abs(row - emptyRow) == 1)
     }
 
-    private fun isPuzzleSolved(board: List<Int>): Boolean {
+    /*private fun isPuzzleSolved(board: List<Int>): Boolean {
         for (i in 0..14) {
             if (board[i] != i + 1) return false
         }
         return board.last() == 0
-    }
+    }*/
+
+    private fun isPuzzleSolved(board: List<Int>) =
+        board.take(15) == (1..15).toList() && board.last() == 0
 
     private fun <T> MutableList<T>.swap(i: Int, j: Int) {
         val temp = this[i]
