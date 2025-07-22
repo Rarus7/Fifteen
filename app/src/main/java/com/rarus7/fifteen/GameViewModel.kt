@@ -3,7 +3,6 @@ package com.rarus7.fifteen
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +13,7 @@ import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.random.Random
 
 class GameViewModel(application: Application) : AndroidViewModel(application){
 
@@ -35,7 +35,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         loadRecords()
     }
 
-    fun startNewGame() {
+    /*fun startNewGame() {
         _moves.value = 0
         _isSolved.value = false
 
@@ -48,11 +48,50 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         } while (!isSolvable(numbers))
 
         _board.value = numbers
+    }*/
+
+    /* ---------- 1. Генератор решаемой комбинации ---------- */
+    fun startNewGame() {
+        _moves.value = 0
+        _isSolved.value = false
+
+        val solved = (1..15) + 0                 // правильная последовательность
+        val board  = solved.toMutableList()
+
+        /* --- делаем 1000 случайных ЛЕГАЛЬНЫХ ходов --- */
+        val random = Random(System.nanoTime())
+        repeat(1_000) {
+            val empty = board.indexOf(0)
+            val neighbours = neighbours4(empty)  // см. ниже
+            val move   = neighbours.random(random)        // выбираем случайного соседа
+            board.swap(empty, move)                       // делаем ход
+        }
+        /* т.к. мы двигали только пустую клетку, раскладка остаётся решаемой */
+
+        _board.value = board
     }
 
+
+    /* ---------- 2. Проверка решаемости (классическая) ---------- */
     private fun isSolvable(list: List<Int>): Boolean {
-        // Алгоритм проверки решаемости (можно найти в интернете)
-        return true // Упрощенная версия (без проверки)
+        val flat = list.filter { it != 0 }       // убираем пустую клетку
+        val inv  = flat.indices.sumOf { i ->
+            (i + 1 until flat.size).count { j -> flat[i] > flat[j] }
+        }
+        val emptyRow = list.indexOf(0) / 4       // нумерация строк снизу (0..3)
+        return (inv + emptyRow + 1) % 2 == 0     // для 4×4 чётная сумма → решаемо
+    }
+
+    /* ---------- 3. Вспомогательные функции ---------- */
+    private fun neighbours4(index: Int): List<Int> {
+        val r = index / 4
+        val c = index % 4
+        val res = mutableListOf<Int>()
+        if (r > 0) res += index - 4   // вверх
+        if (r < 3) res += index + 4   // вниз
+        if (c > 0) res += index - 1   // влево
+        if (c < 3) res += index + 1   // вправо
+        return res
     }
 
     private var _lastMoveFrom = MutableStateFlow(-1)
