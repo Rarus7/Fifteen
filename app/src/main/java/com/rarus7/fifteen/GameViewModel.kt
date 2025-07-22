@@ -35,21 +35,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         loadRecords()
     }
 
-    /*fun startNewGame() {
-        _moves.value = 0
-        _isSolved.value = false
-
-        // Создаем список чисел от 1 до 15 + 0 (пустая клетка)
-        val numbers = (1..15).toMutableList().apply { add(0) }
-
-        // Перемешиваем, пока не получим решаемую комбинацию
-        do {
-            numbers.shuffle()
-        } while (!isSolvable(numbers))
-
-        _board.value = numbers
-    }*/
-
     /* ----------  Генератор решаемой комбинации ---------- */
     fun startNewGame() {
         _moves.value = 0
@@ -128,13 +113,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
         return (row == emptyRow && Math.abs(col - emptyCol) == 1) ||
                 (col == emptyCol && Math.abs(row - emptyRow) == 1)
     }
-
-    /*private fun isPuzzleSolved(board: List<Int>): Boolean {
-        for (i in 0..14) {
-            if (board[i] != i + 1) return false
-        }
-        return board.last() == 0
-    }*/
 
     private fun isPuzzleSolved(board: List<Int>) =
         board.take(15) == (1..15).toList() && board.last() == 0
