@@ -67,11 +67,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application){
             if (c < 3) add(index + 1)
         }
 
-    private var _lastMoveFrom = MutableStateFlow(-1)
-    private var _lastMoveTo = MutableStateFlow(-1)
+    //private var _lastMoveFrom = MutableStateFlow(-1)
+    //private var _lastMoveTo = MutableStateFlow(-1)
 
-    val lastMoveFrom = _lastMoveFrom.asStateFlow()
-    val lastMoveTo = _lastMoveTo.asStateFlow()
+    //val lastMoveFrom = _lastMoveFrom.asStateFlow()
+    //val lastMoveTo = _lastMoveTo.asStateFlow()
 
     // Добавляем состояние для анимации
     private val _animatingTile = MutableStateFlow<Pair<Int, Int>?>(null) // from -> to
